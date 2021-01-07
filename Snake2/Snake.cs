@@ -54,16 +54,16 @@ namespace Snake2
     class Snake
     {
         bool isEat = false;
-        public List<Quad> parts;
+        public LinkedList<Quad> parts;
         SolidColorBrush head = Brushes.Red, tail = Brushes.DarkRed;
         int block_size;
         Direction direction = Direction.UP;
         private Bonus bonus = null;
         public Snake(Point start1, Direction d, int size)
         {
-            parts = new List<Quad>();
+            parts = new LinkedList<Quad>();
        
-            parts.Add(new Quad(start1, size, head));
+            parts.AddLast(new Quad(start1, size, head));
             direction = d;
             block_size = size;
         }
@@ -85,23 +85,24 @@ namespace Snake2
             switch (direction)
             {
                 case Direction.UP:
-                    parts.Add(new Quad(new Point(last.position.X, last.position.Y - block_size), block_size, head));
+                    parts.AddLast(new Quad(new Point(last.position.X, last.position.Y - block_size), block_size, head));
                     break;
                 case Direction.DOWN:
-                    parts.Add(new Quad(new Point(last.position.X, last.position.Y + block_size), block_size, head));
+                    parts.AddLast(new Quad(new Point(last.position.X, last.position.Y + block_size), block_size, head));
                     break;
                 case Direction.RIGHT:
-                    parts.Add(new Quad(new Point(last.position.X + block_size, last.position.Y), block_size, head));
+                    parts.AddLast(new Quad(new Point(last.position.X + block_size, last.position.Y), block_size, head));
                     break;
                 case Direction.LEFT:
-                    parts.Add(new Quad(new Point(last.position.X - block_size, last.position.Y), block_size, head));
+                    parts.AddLast(new Quad(new Point(last.position.X - block_size, last.position.Y), block_size, head));
                     break;
             }
             canvas.Add(parts.Last());
             if (!isEat)
             {
-                canvas.Remove(parts.ElementAt(0));
-                parts.RemoveAt(0);
+                canvas.Remove(parts.First());
+       
+                parts.RemoveFirst();
             }
             else
             {

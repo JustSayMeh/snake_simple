@@ -25,14 +25,14 @@ namespace Snake2
         double width = 0;
         double height = 0;
         int h_count, w_count;
-        List<Bonus> bonuses = new List<Bonus>();
-        List<Direction> directions = new List<Direction>();
+        LinkedList<Bonus> bonuses = new LinkedList<Bonus>(), l_bonuses;
+        LinkedList<Direction> directions = new LinkedList<Direction>();
         Snake snake;
         Quad apple;
         CustomCanvas canvas;
         int bestscore = 0;
         int animation_ticker = 0, delimiter = 0;
-        System.Windows.Threading.DispatcherTimer gameTickTimer;
+        Timer timer;
         static int tick_time = 50;
         public MainWindow()
         {
@@ -43,12 +43,7 @@ namespace Snake2
             bestscore = int.Parse(bestScoreText);
 
             canvas = new CustomCanvas(GameArea);
-            gameTickTimer = new System.Windows.Threading.DispatcherTimer();
-            gameTickTimer.Tick += GameTickTimer_Tick;
-            gameTickTimer.Interval = TimeSpan.FromMilliseconds(tick_time);
-            
-            
-            
+            timer = new Timer(tick_time, GameTickTimer_Tick);
         }
         private Point randomPoint(int t, int b, int l, int r)
         {
@@ -85,7 +80,7 @@ namespace Snake2
         }
         private void Game_start()
         {
-            gameTickTimer.IsEnabled = false;
+            timer.stop();
             bonuses.Clear();
             canvas.resetCanvas();
             
@@ -131,7 +126,7 @@ namespace Snake2
             } while (!validateGenerator(apple));
             canvas.Add(apple);
             canvas.setPosition(apple);
-            gameTickTimer.IsEnabled = true;
+            timer.start();
         }
         private void GameTickTimer_Tick(object sender, EventArgs e)
         {
@@ -150,13 +145,13 @@ namespace Snake2
 
         private void game_step(Snake snake)
         {
-            if (!gameTickTimer.IsEnabled)
+            if (!timer.isRunning())
                 return;
 
             if (directions.Count > 0)
             {
                 snake.setDirection(directions.ElementAt(0));
-                directions.RemoveAt(0);
+                directions.RemoveFirst();
             }
 
             snake.move(canvas);
@@ -201,40 +196,44 @@ namespace Snake2
                 canvas.Add(apple);
                 canvas.setPosition(apple);
             }
-
-            for (int i = 0; i < bonuses.Count; i++)
-            { 
-
-                if (hasColision(bonuses.ElementAt(i), snake.parts.Last()))
-                { 
-                    snake.setBonus(bonuses.ElementAt(i));
-                    canvas.Remove(bonuses.ElementAt(i).GetRectangle());
-                    bonuses.RemoveAt(i);
-                }else if(bonuses.ElementAt(i).decrementAge() == 0)
+            
+            l_bonuses = new LinkedList<Bonus>(bonuses);
+            foreach(Bonus th in bonuses)
+            {
+                if (hasColision(th, snake.parts.Last()))
                 {
-                    canvas.Remove(bonuses.ElementAt(i).GetRectangle());
-                    bonuses.RemoveAt(i);
+                    snake.setBonus(th);
+                    canvas.Remove(th.GetRectangle());
+
+                    l_bonuses.Remove(th);
+                }
+                else if (th.decrementAge() == 0)
+                {
+                    canvas.Remove(th.GetRectangle());
+                    l_bonuses.Remove(th);
                 }
             }
-           
+
+            bonuses = l_bonuses;
         }
         private void Window_KeyUp(object sender, KeyEventArgs e)
         {
-            if (!gameTickTimer.IsEnabled)
+            if (!timer.isRunning())
                 return;
             switch (e.Key)
             {
                 case Key.W:
-                    directions.Add( Direction.UP);
+                    directions.AddLast(Direction.UP);
+             
                     break;
                 case Key.S:
-                    directions.Add(Direction.DOWN);
+                    directions.AddLast(Direction.DOWN);
                     break;
                 case Key.D:
-                    directions.Add(Direction.RIGHT);
+                    directions.AddLast(Direction.RIGHT);
                     break;
                 case Key.A:
-                    directions.Add(Direction.LEFT);
+                    directions.AddLast(Direction.LEFT);
                     break;
                 case Key.E:
                     snake.setEat();
@@ -248,7 +247,7 @@ namespace Snake2
         private bool hasBorderCollision(Quad q)
         {
             Point pos = q.getPosition();
-            return pos.X < block_size || pos.X >= width - block_size || pos.Y < block_size || pos.Y > height - 2 * block_size; 
+            return pos.X < block_size || pos.X > width - 1.5 * block_size || pos.Y < block_size || pos.Y > height - 1.5 * block_size; 
         }
 
         private bool hasColision(Quad a, Quad b)
@@ -270,15 +269,9 @@ namespace Snake2
 
         private bool validateGenerator(Quad q)
         {
-            for (int i = 0; i < snake.parts.Count; i++)
+            for (int i = 0; i < canvas.getQuads().Count; i++)
             {
-                Quad th = snake.parts.ElementAt(i);
-                if (hasColision(q, th))
-                    return false;
-            }
-            for (int i = 0; i < bonuses.Count; i++)
-            {
-                Quad th = bonuses.ElementAt(i);
+                Quad th = canvas.getQuads().ElementAt(i);
                 if (hasColision(q, th))
                     return false;
             }
@@ -324,7 +317,7 @@ namespace Snake2
                 {
                     bonus = generateBonus();
                 } while (!validateGenerator(bonus) || hasColision(apple, bonus));
-                bonuses.Add(bonus);
+                bonuses.AddLast(bonus);
                 canvas.Add(bonus);
                 canvas.setPosition(bonus);
             }
@@ -367,7 +360,7 @@ namespace Snake2
         public void Game_end()
         {
             canvas.resetCanvas();
-            gameTickTimer.IsEnabled = false;
+            timer.stop();
             startMenu.Visibility = Visibility.Visible;
             this.Title = "Snake";
             int curcount = snake.parts.Count - 2;

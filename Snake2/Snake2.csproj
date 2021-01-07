@@ -58,6 +58,7 @@
     <Compile Include="Bonus.cs" />
     <Compile Include="CustomCanvas.cs" />
     <Compile Include="Snake.cs" />
+    <Compile Include="Ticker.cs" />
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>

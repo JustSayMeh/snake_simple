@@ -12,11 +12,15 @@ namespace Snake2
     {
         private Canvas GameArea;
         private List<Quad> quads = new List<Quad>();
+
         public CustomCanvas(Canvas area)
         {
             GameArea = area;
         }
-
+        public List<Quad> getQuads()
+        {
+            return quads;
+        }
         public void Add(Rectangle rect)
         {
             GameArea.Children.Add(rect);
