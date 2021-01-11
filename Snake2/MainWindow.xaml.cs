@@ -294,13 +294,13 @@ namespace Snake2
 
         private void RadioButton_Click_2(object sender, RoutedEventArgs e)
         {
-            tick_time = 75;
+            tick_time = 80;
             timer = new Timer(tick_time, timer_tick);
         }
 
         private void RadioButton_Click_3(object sender, RoutedEventArgs e)
         {
-            tick_time = 50;
+            tick_time = 60;
             timer = new Timer(tick_time, timer_tick);
         }
 
