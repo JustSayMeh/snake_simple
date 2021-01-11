@@ -30,50 +30,19 @@ namespace Snake2
         Snake snake;
         Quad apple;
         CustomCanvas canvas;
-        int bestscore = 0;
+        IntSystemVariable bestscore = new IntSystemVariable(best_score_variable_name, EnvironmentVariableTarget.User);
         int animation_ticker = 0, delimiter = 0;
         Timer timer;
         static int tick_time = 50;
         public MainWindow()
         {
             InitializeComponent();
-
-            string bestScoreText = Environment.GetEnvironmentVariable(best_score_variable_name, EnvironmentVariableTarget.User);
-            BestScore.Text = bestScoreText;
-            bestscore = int.Parse(bestScoreText);
-
+            BestScore.Text = bestscore.get().ToString();
             canvas = new CustomCanvas(GameArea);
-            timer = new Timer(tick_time, GameTickTimer_Tick);
+            timer = new Timer(tick_time, timer_tick);
         }
-        private Point randomPoint(int t, int b, int l, int r)
-        {
-            Random rand = new Random();
-            int x = rand.Next(l, r);
-            int y = rand.Next(t, b);
-            return new Point(x * block_size, y * block_size);
-        }
-        private Direction randomDirection()
-        {
-            Random rand = new Random();
-            int f = rand.Next(1, 4);
-            switch (f)
-            {
-                case 1:
-                    return Direction.UP;
-               
-                case 2:
-                    return Direction.DOWN;
-                 
-                case 3:
-                    return Direction.LEFT;
-               
-                case 4:
-                    return Direction.RIGHT;
-                    
-                default:
-                    return Direction.UP;
-            }
-        }
+     
+
         private void setGameScore(int score)
         {
             this.Title = $"Score: {score}";
@@ -90,7 +59,7 @@ namespace Snake2
 
             h_count = (int)height / block_size;
             w_count = (int)width / block_size;
-            snake = new Snake(randomPoint(5, h_count - 5, 5, w_count - 5), randomDirection(), block_size);
+            snake = new Snake(Tools.randomPoint(block_size, 5, h_count - 5, 5, w_count - 5), Tools.randomDirection(), block_size);
             snake.setEat();
             setGameScore(0);
             for (int i = 0; i < h_count; i++)
@@ -123,12 +92,12 @@ namespace Snake2
             do
             {
                 apple = generateApple();
-            } while (!validateGenerator(apple));
+            } while (!Tools.validateGenerator(apple, canvas));
             canvas.Add(apple);
             canvas.setPosition(apple);
             timer.start();
         }
-        private void GameTickTimer_Tick(object sender, EventArgs e)
+        private void timer_tick(object sender, EventArgs e)
         {
             
             if (delimiter == 1)
@@ -159,7 +128,7 @@ namespace Snake2
             {
                 canvas.setPosition(snake.parts.ElementAt(i));
             }
-            if (hasBorderCollision(snake.parts.Last()))
+            if (Tools.hasBorderCollision(snake, block_size, width, height))
             {
                 if (snake.getEffect() == Snake2.Effect.NOCLIP)
                 {
@@ -180,11 +149,11 @@ namespace Snake2
                     
               
             }
-            if (!validateHeadMove(snake.parts.Last()) && snake.getEffect() != Snake2.Effect.NOCLIP)
+            if (!Tools.validateHeadMove(snake) && snake.getEffect() != Snake2.Effect.NOCLIP)
             {
                 Game_end();
             }
-            if (hasColision(apple, snake.parts.Last()))
+            if (Tools.hasColision(apple, snake.parts.Last()))
             {
                 snake.setEat();
                 canvas.Remove(apple);
@@ -192,7 +161,7 @@ namespace Snake2
                 do
                 {
                     apple = generateApple();
-                } while (!validateGenerator(apple));
+                } while (!Tools.validateGenerator(apple, canvas));
                 canvas.Add(apple);
                 canvas.setPosition(apple);
             }
@@ -200,7 +169,7 @@ namespace Snake2
             l_bonuses = new LinkedList<Bonus>(bonuses);
             foreach(Bonus th in bonuses)
             {
-                if (hasColision(th, snake.parts.Last()))
+                if (Tools.hasColision(th, snake.parts.Last()))
                 {
                     snake.setBonus(th);
                     canvas.Remove(th.GetRectangle());
@@ -244,18 +213,8 @@ namespace Snake2
             }
             //move_snake();
         }
-        private bool hasBorderCollision(Quad q)
-        {
-            Point pos = q.getPosition();
-            return pos.X < block_size || pos.X > width - 1.5 * block_size || pos.Y < block_size || pos.Y > height - 1.5 * block_size; 
-        }
 
-        private bool hasColision(Quad a, Quad b)
-        {
-            if (a.position.X == b.position.X && a.position.Y == b.position.Y)
-                return true;
-            return false;
-        }
+
 
         private Quad generateApple()
         {
@@ -267,27 +226,9 @@ namespace Snake2
             return quad;
         }
 
-        private bool validateGenerator(Quad q)
-        {
-            for (int i = 0; i < canvas.getQuads().Count; i++)
-            {
-                Quad th = canvas.getQuads().ElementAt(i);
-                if (hasColision(q, th))
-                    return false;
-            }
-            return true;
-        }
 
-        private bool validateHeadMove(Quad head)
-        {
-            for (int i = 0; i < snake.parts.Count - 1; i++)
-            {
-                Quad th = snake.parts.ElementAt(i);
-                if (hasColision(head, th))
-                    return false;
-            }
-            return true;
-        }
+
+      
 
         private void Button_Click_1(object sender, RoutedEventArgs e)
         {
@@ -315,8 +256,8 @@ namespace Snake2
                 Bonus bonus;
                 do
                 {
-                    bonus = generateBonus();
-                } while (!validateGenerator(bonus) || hasColision(apple, bonus));
+                    bonus = Tools.generateBonus(block_size, w_count, h_count);
+                } while (!Tools.validateGenerator(bonus, canvas) || Tools.hasColision(apple, bonus));
                 bonuses.AddLast(bonus);
                 canvas.Add(bonus);
                 canvas.setPosition(bonus);
@@ -325,7 +266,7 @@ namespace Snake2
 
         private void Button_Click(object sender, RoutedEventArgs e)
         {
-            Environment.SetEnvironmentVariable(best_score_variable_name, "0", EnvironmentVariableTarget.User);
+            bestscore.set(0);
             BestScore.Text = "0";
         }
 
@@ -339,24 +280,6 @@ namespace Snake2
             block_size = 10;
         }
 
-        private Bonus generateBonus()
-        {
-            Random rand = new Random();
-            double r = rand.NextDouble();
-            int x = rand.Next(1, w_count - 1);
-            int y = rand.Next(1, h_count - 1);
-            Point pos = new Point(block_size * x, block_size * y);
-            if (r < 0.1)
-            { 
-                return new NoClipBonus(pos, block_size);  
-            }    
-            else
-            {
-                return new DoubleSpeedBonus(pos, block_size);
-            }
-
-        }
-
         public void Game_end()
         {
             canvas.resetCanvas();
@@ -364,9 +287,9 @@ namespace Snake2
             startMenu.Visibility = Visibility.Visible;
             this.Title = "Snake";
             int curcount = snake.parts.Count - 2;
-            if (curcount > bestscore)
+            if (curcount > bestscore.get())
             {
-                Environment.SetEnvironmentVariable(best_score_variable_name, curcount.ToString(), EnvironmentVariableTarget.User);
+                bestscore.set(curcount);
                 BestScore.Text = curcount.ToString();
             }
         }
