@@ -30,16 +30,17 @@ namespace Snake2
         Snake snake;
         Quad apple;
         CustomCanvas canvas;
-        IntSystemVariable bestscore = new IntSystemVariable(best_score_variable_name, EnvironmentVariableTarget.User);
+        IntSystemVariable bestscore;
         int animation_ticker = 0, delimiter = 0;
         Timer timer;
-        static int tick_time = 50;
+        static int tick_time = 60;
         public MainWindow()
         {
             InitializeComponent();
+            bestscore = new IntSystemVariable(best_score_variable_name, EnvironmentVariableTarget.User);
             BestScore.Text = bestscore.get().ToString();
             canvas = new CustomCanvas(GameArea);
-            timer = new Timer(tick_time, timer_tick);
+
         }
      
 
@@ -49,6 +50,7 @@ namespace Snake2
         }
         private void Game_start()
         {
+            timer = new Timer(tick_time, timer_tick);
             timer.stop();
             bonuses.Clear();
             canvas.resetCanvas();
@@ -103,6 +105,7 @@ namespace Snake2
             if (delimiter == 1)
             {
                 game_step(snake);
+                animation_step();
                 addBonus();
             }else if (snake.getEffect() == Snake2.Effect.DOUBLESPEED)
                 game_step(snake);
@@ -165,21 +168,40 @@ namespace Snake2
                 canvas.Add(apple);
                 canvas.setPosition(apple);
             }
-            
+        }
+
+        private void animation_step()
+        {
             l_bonuses = new LinkedList<Bonus>(bonuses);
-            foreach(Bonus th in bonuses)
+            foreach (Bonus th in bonuses)
             {
+                int age = th.decrementAge();
                 if (Tools.hasColision(th, snake.parts.Last()))
                 {
                     snake.setBonus(th);
-                    canvas.Remove(th.GetRectangle());
-
+                    canvas.Remove(th);
                     l_bonuses.Remove(th);
                 }
-                else if (th.decrementAge() == 0)
+                else if (age == 0)
                 {
-                    canvas.Remove(th.GetRectangle());
+                    canvas.Remove(th);
                     l_bonuses.Remove(th);
+                }
+                else if (age < 5)
+                {
+                    th.GetRectangle().Opacity = 0.3;
+                }
+                else if (age < 10)
+                {
+                    th.GetRectangle().Opacity = 0.5;
+                }
+                else if (age < 15)
+                {
+                    th.GetRectangle().Opacity = 0.7;
+                }
+                else if (age < 20)
+                {
+                    th.GetRectangle().Opacity = 0.9;
                 }
             }
 
@@ -268,6 +290,18 @@ namespace Snake2
         {
             bestscore.set(0);
             BestScore.Text = "0";
+        }
+
+        private void RadioButton_Click_2(object sender, RoutedEventArgs e)
+        {
+            tick_time = 60;
+            timer = new Timer(tick_time, timer_tick);
+        }
+
+        private void RadioButton_Click_3(object sender, RoutedEventArgs e)
+        {
+            tick_time = 40;
+            timer = new Timer(tick_time, timer_tick);
         }
 
         private void RadioButton_Click(object sender, RoutedEventArgs e)

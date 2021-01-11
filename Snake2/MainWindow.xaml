@@ -49,8 +49,14 @@
                     </StackPanel>
                     <StackPanel Orientation="Vertical" >
                         <TextBlock FontWeight="Bold" FontSize="30">Размер Поля</TextBlock>
-                        <RadioButton FontSize="15" Click="RadioButton_Click_1" GroupName="AreaSize">Большой</RadioButton>
                         <RadioButton FontSize="15" Click="RadioButton_Click" GroupName="AreaSize" IsChecked="True">Малый</RadioButton>
+                        <RadioButton FontSize="15" Click="RadioButton_Click_1" GroupName="AreaSize">Большой</RadioButton>
+
+                    </StackPanel>
+                    <StackPanel Orientation="Vertical" >
+                        <TextBlock FontWeight="Bold" FontSize="30">Скорость игры</TextBlock>
+                        <RadioButton FontSize="15" Click="RadioButton_Click_2" GroupName="GameSpeed" IsChecked="True">Нормальная</RadioButton>
+                        <RadioButton FontSize="15" Click="RadioButton_Click_3" GroupName="GameSpeed">Высокая</RadioButton>
                     </StackPanel>
                 </StackPanel>
             </Canvas>

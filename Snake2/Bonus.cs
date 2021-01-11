@@ -76,7 +76,7 @@ namespace Snake2
         public DoubleSpeedBonus(Point pos, int block_size) : base(pos, block_size, color)
         {
             effect = Effect.DOUBLESPEED;
-            lifecount = 50;
+            lifecount = 90;
         }
         public override void custEffect(Snake snake)
         {
