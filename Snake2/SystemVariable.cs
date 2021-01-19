@@ -22,7 +22,9 @@ namespace Snake2
         public int get()
         {
             string rs = Environment.GetEnvironmentVariable(name, target);
-            return int.Parse(rs);
+            if (rs != null)
+                return int.Parse(rs);
+            else return 0;
         }
     }
 }
